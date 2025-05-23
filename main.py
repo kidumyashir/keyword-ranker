@@ -1,11 +1,21 @@
 from flask import Flask, request, jsonify
 import requests
 import os
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 
-# 🔐 מפתח SerpAPI שלך - לשימוש מקומי בלבד, אל תשאיר כך בפרודקשן
+# מפתח SerpAPI שלך - לשימוש מקומי בלבד (לפרודקשן תשתמש ב־SECRET)
 SERPAPI_KEY = "f09191e9529ac5c8524214e0fe7f5a79dbf754f912330921b57829c6b2fc6ff5"
+
+def domain_matches(domain: str, link: str) -> bool:
+    try:
+        parsed = urlparse(link)
+        link_domain = parsed.netloc.lower().replace("www.", "")
+        target_domain = domain.lower().replace("www.", "")
+        return link_domain == target_domain
+    except Exception:
+        return False
 
 @app.route("/", methods=["POST"])
 def check_ranking():
@@ -23,7 +33,7 @@ def check_ranking():
             "google_domain": "google.co.il",
             "gl": "il",
             "hl": "he",
-            "num": 100,  # ← עד 100 תוצאות
+            "num": 100,
             "api_key": SERPAPI_KEY
         }
 
@@ -35,7 +45,7 @@ def check_ranking():
 
         for idx, result in enumerate(results.get("organic_results", []), start=1):
             link = result.get("link", "")
-            if domain in link:
+            if domain_matches(domain, link):
                 position = idx
                 found_url = link
                 break
@@ -46,6 +56,7 @@ def check_ranking():
             "position": position,
             "url": found_url
         })
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
