@@ -1,11 +1,11 @@
 from flask import Flask, request, jsonify
 import requests
 import os
-from urllib.parse import urlparse
 
 app = Flask(__name__)
 
-SERPAPI_KEY = os.getenv("SERPAPI_KEY", "your_serpapi_key_here")
+# 🔐 מפתח SerpAPI שלך - לשימוש מקומי בלבד, אל תשאיר כך בפרודקשן
+SERPAPI_KEY = "f09191e9529ac5c8524214e0fe7f5a79dbf754f912330921b57829c6b2fc6ff5"
 
 @app.route("/", methods=["POST"])
 def check_ranking():
@@ -23,6 +23,7 @@ def check_ranking():
             "google_domain": "google.co.il",
             "gl": "il",
             "hl": "he",
+            "num": 100,  # ← עד 100 תוצאות
             "api_key": SERPAPI_KEY
         }
 
@@ -31,12 +32,10 @@ def check_ranking():
 
         position = -1
         found_url = "N/A"
-        clean_domain = domain.replace("https://", "").replace("http://", "").replace("www.", "").strip("/")
 
         for idx, result in enumerate(results.get("organic_results", []), start=1):
             link = result.get("link", "")
-            parsed_link = urlparse(link).netloc.replace("www.", "")
-            if clean_domain in parsed_link:
+            if domain in link:
                 position = idx
                 found_url = link
                 break
