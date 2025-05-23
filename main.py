@@ -5,8 +5,7 @@ from urllib.parse import urlparse
 
 app = Flask(__name__)
 
-# הכנס את המפתח ישירות (אם לא עובד דרך SECRET)
-SERPAPI_KEY = "f09191e9529ac5c8524214e0fe7f5a79dbf754f912330921b57829c6b2fc6ff5"
+SERPAPI_KEY = os.getenv("SERPAPI_KEY", "your_serpapi_key_here")
 
 @app.route("/", methods=["POST"])
 def check_ranking():
@@ -32,8 +31,6 @@ def check_ranking():
 
         position = -1
         found_url = "N/A"
-
-        # נורמליזציה של הדומיין המבוקש
         clean_domain = domain.replace("https://", "").replace("http://", "").replace("www.", "").strip("/")
 
         for idx, result in enumerate(results.get("organic_results", []), start=1):
@@ -50,7 +47,6 @@ def check_ranking():
             "position": position,
             "url": found_url
         })
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
