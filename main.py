@@ -4,8 +4,8 @@ import os
 
 app = Flask(__name__)
 
-# קח את המפתח מה־Environment של Cloud Run (מומלץ להגדיר כ־SECRET)
-SERPAPI_KEY = os.getenv("SERPAPI_KEY", "your_serpapi_key_here")
+# ✅ המפתח מוכנס ישירות כאן (לא מומלץ בפרודקשן)
+SERPAPI_KEY = "f09191e9529ac5c8524214e0fe7f5a79dbf754f912330921b57829c6b2fc6ff5"
 
 @app.route("/", methods=["POST"])
 def check_ranking():
@@ -48,7 +48,6 @@ def check_ranking():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# קו חשוב: האזנה ל־PORT מה־ENV – חובה ב־Cloud Run
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
