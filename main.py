@@ -1,33 +1,44 @@
+
 from flask import Flask, request, jsonify
 import requests
-from bs4 import BeautifulSoup
+import os
 
 app = Flask(__name__)
+
+SERPAPI_KEY = os.getenv("SERPAPI_KEY", "your_serpapi_key_here")
 
 @app.route("/", methods=["POST"])
 def check_ranking():
     data = request.get_json()
     keyword = data.get("keyword")
     domain = data.get("domain")
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
 
-    search_url = f"https://www.google.co.il/search?q={keyword.replace(' ', '+')}&hl=en&gl=il"
-    response = requests.get(search_url, headers=headers)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    results = soup.find_all('div', class_='yuRUbf')
+    if not keyword or not domain:
+        return jsonify({"error": "Missing 'keyword' or 'domain'"}), 400
 
-    position = -1
+    try:
+        params = {
+            "engine": "google",
+            "q": keyword,
+            "google_domain": "google.co.il",
+            "gl": "il",
+            "hl": "he",
+            "api_key": SERPAPI_KEY
+        }
 
-    for index, result in enumerate(results, start=1):
-        link = result.find('a')['href']
-        if domain in link:
-            position = index
-            break
+        response = requests.get("https://serpapi.com/search", params=params)
+        results = response.json()
 
-    return jsonify({
-        "keyword": keyword,
-        "domain": domain,
-        "position": position
-    })
+        position = -1
+        found_url = "N/A"
+
+        for idx, result in enumerate(results.get("organic_results", []), start=1):
+            link = result.get("link", "")
+            if domain in link:
+                position = idx
+                found_url = link
+                break
+
+        return jsonify({"keyword": keyword, "domain": domain, "position": position, "url": found_url})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
